@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">&#x0A;<refactoring comment="Rename resource &apos;UTCM/best_bouding_boxes.pro&apos; to &apos;best_bouding_box.pro&apos;" description="Rename resource &apos;best_bouding_boxes.pro&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="best_bouding_boxes.pro" name="best_bouding_box.pro" stamp="1728652710769" updateReferences="true"/>&#x0A;<refactoring comment="Rename resource &apos;UTCM/save_output_maps.pro&apos; to &apos;build_maps.pro&apos;" description="Rename resource &apos;save_output_maps.pro&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="save_output_maps.pro" name="build_maps.pro" stamp="1728653214053" updateReferences="true"/>
+</session>

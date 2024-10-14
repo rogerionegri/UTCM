@@ -1,0 +1,10 @@
+FUNCTION REORDER4ICM, img
+
+  Dims = GET_DIMENSIONS(img)
+  NB = Dims[0] & NC = Dims[1] & NL = Dims[2]
+
+  __img = FLTARR(NC,NL,n_elements(img[*,0,0]))
+  for b = 0, n_elements(img[*,0,0])-1 do __img[*,*,b] = img[b,*,*]
+
+  Return, __img
+END

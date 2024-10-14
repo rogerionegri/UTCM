@@ -1,0 +1,305 @@
+;----------------------
+FUNCTION build_level_map_seeds, walk, tauDev, alpha
+
+  dims = size(walk.walk,/dimensions)
+  mapLevel = INTARR(dims[1],dims[2])
+
+  posNonChange = where(walk.stat[1,*,*] lt tauDev)
+  posChange = where(walk.stat[1,*,*] ge tauDev)
+
+  imTestLB = reform(walk.LB[1,*,*],dims[1],dims[2])
+  imTestF = reform(walk.FT[1,*,*],dims[1],dims[2])
+
+  posF = where(imTestF lt alpha)
+  posLB = where(imTestLB lt alpha)
+
+  posLB[0] = 0 & posF[0] = 0 ;garantir que nao exista caso "-1" (ausencia de)
+  imAlphaF = imTestF*0 & imAlphaF[posF] = 1
+  imAlphaLB = imTestLB*0 & imAlphaLB[posLB] = 1
+
+  ;imFLB = imAlphaF[*,*]*imAlphaLB[*,*]
+  imFLB = imAlphaF[*,*]
+
+  posSeasonal = where(imFLB[posChange] eq 0)
+  posPermanent = where(imFLB[posChange] eq 1)
+  posSeasonal[0] = 0
+  posPermanent[0] = 0
+
+  rois = [PTR_NEW({RoiName: 'NC', RoiColor: [255,0,0], RoiLex: posNonChange}), $
+    PTR_NEW({RoiName: 'Seasonal', RoiColor: [0,255,0], RoiLex: posChange[posSeasonal]}), $
+    PTR_NEW({RoiName: 'Permanent', RoiColor: [0,0,255], RoiLex: posChange[posPermanent]})]
+
+
+  mapLevel[posNonChange] = 0
+  mapLevel[posChange[posSeasonal]] = 1
+  mapLevel[posChange[posPermanent]] = 2
+
+  Return, {rois: rois, mapLevel: mapLevel}
+END
+
+
+;
+;;----------------------
+;FUNCTION build_level_map, imDev, imRMSE, imLB, tauDev, tauRMSE, alphaLB 
+;  dims = size(imDev,/dimensions)
+;  mapLevel = INTARR(dims[0],dims[1])
+;
+;  posNonChange = where(imDev lt tauDev)
+;  posChange = where(imDev ge tauDev)
+;
+;  posSeasonal = where(imRMSE[posChange] gt tauRMSE)
+;  
+;  mapThresholdRMSE = mapLevel
+;  
+;  posLowRMSE = where(imRMSE[posChange] le tauRMSE)
+;  
+;  mapThresholdRMSE[posChange[posLowRMSE]] =  1
+;  __mapThresholdRMSE = mapThresholdRMSE
+;  
+;  _posPermanent = where(__mapThresholdRMSE[posChange] eq 1);ge tauRMSE)
+;  
+;  posPermanent = where(imLB[posChange[_posPermanent]] le alphaLB)
+;  
+;  mapLevel[*] = -1
+;  mapLevel[posNonChange] = 0
+;  mapLevel[posChange[posSeasonal]] = 1
+;  mapLevel[posChange[_posPermanent[posPermanent]]] = 2
+;
+;  ;make at least one pixel -1
+;  mapLevel[0,0] = -1
+;  
+;  
+;  Return, mapLevel
+;END
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;;----------------------
+;FUNCTION build_level_map_seeds_subsample, walk, tauDev, alpha
+;
+;  seed = long(systime(/seconds)) mod 1000
+;  qntLim = 5000
+; 
+;  dims = size(walk.walk,/dimensions)
+;  mapLevel = INTARR(dims[1],dims[2])
+;
+;  posNonChange = where(walk.stat[1,*,*] lt tauDev)
+;  posChange = where(walk.stat[1,*,*] ge tauDev)
+;
+;  imTestLB = reform(walk.LB[1,*,*],dims[1],dims[2])
+;  imTestF = reform(walk.FT[1,*,*],dims[1],dims[2])
+;
+;  posF = where(imTestF lt alpha)
+;  posLB = where(imTestLB lt alpha)
+;
+;  posLB[0] = 0 & posF[0] = 0 ;garantir que nao exista caso "-1" (ausencia de)
+;  imAlphaF = imTestF*0 & imAlphaF[posF] = 1
+;  imAlphaLB = imTestLB*0 & imAlphaLB[posLB] = 1
+;
+;  ;imFLB = imAlphaF[*,*]*imAlphaLB[*,*]
+;  imFLB = imAlphaF[*,*]
+;
+;  posSeasonal = where(imFLB[posChange] eq 0)
+;  posPermanent = where(imFLB[posChange] eq 1)
+;  posSeasonal[0] = 0
+;  posPermanent[0] = 0
+;  
+;  
+;  if n_elements(posNonChange) gt qntLim then posNonChange = posNonChange[ (sort(randomu(seed,n_elements(posNonChange))))[0:qntLim-1] ]
+;  if n_elements(posSeasonal) gt qntLim then posSeasonal = posSeasonal[ (sort(randomu(seed,n_elements(posSeasonal))))[0:qntLim-1] ]
+;  if n_elements(posPermanent) gt qntLim then posPermanent = posPermanent[ (sort(randomu(seed,n_elements(posPermanent))))[0:qntLim-1] ]
+;  
+;
+;  rois = [PTR_NEW({RoiName: 'NC', RoiColor: [255,0,0], RoiLex: posNonChange}), $
+;    PTR_NEW({RoiName: 'Seasonal', RoiColor: [0,255,0], RoiLex: posChange[posSeasonal]}), $
+;    PTR_NEW({RoiName: 'Permanent', RoiColor: [0,0,255], RoiLex: posChange[posPermanent]})]
+;
+;
+;  mapLevel[*,*] = -1
+;  mapLevel[posNonChange] = 0
+;  mapLevel[posChange[posSeasonal]] = 1
+;  mapLevel[posChange[posPermanent]] = 2
+;
+;  Return, {rois: rois, mapLevel: mapLevel}
+;END
+;
+;
+;;----------------------
+;FUNCTION build_level_map_seeds_subsample_balanced, walk, tauDev, alpha
+;
+;  seed = long(systime(/seconds)) mod 1000
+;  qntLim = 5000
+;
+;  dims = size(walk.walk,/dimensions)
+;  mapLevel = INTARR(dims[1],dims[2])
+;
+;  posNonChange = where(walk.stat[1,*,*] lt tauDev)
+;  posChange = where(walk.stat[1,*,*] ge tauDev)
+;
+;  imTestLB = reform(walk.LB[1,*,*],dims[1],dims[2])
+;  imTestF = reform(walk.FT[1,*,*],dims[1],dims[2])
+;
+;  posF = where(imTestF lt alpha)
+;  posLB = where(imTestLB lt alpha)
+;
+;  posLB[0] = 0 & posF[0] = 0 ;garantir que nao exista caso "-1" (ausencia de)
+;  imAlphaF = imTestF*0 & imAlphaF[posF] = 1
+;  imAlphaLB = imTestLB*0 & imAlphaLB[posLB] = 1
+;
+;  ;imFLB = imAlphaF[*,*]*imAlphaLB[*,*]
+;  imFLB = imAlphaF[*,*]
+;
+;  posSeasonal = where(imFLB[posChange] eq 0)
+;  posPermanent = where(imFLB[posChange] eq 1)
+;  posSeasonal[0] = 0
+;  posPermanent[0] = 0
+;
+;
+;  refMin = min([posNonChange,posSeasonal,posPermanent])
+;  if refMin le qntLim then qntLim = refMin 
+;
+;  if n_elements(posNonChange) gt qntLim then posNonChange = posNonChange[ (sort(randomu(seed,n_elements(posNonChange))))[0:qntLim-1] ]
+;  if n_elements(posSeasonal) gt qntLim then posSeasonal = posSeasonal[ (sort(randomu(seed,n_elements(posSeasonal))))[0:qntLim-1] ]
+;  if n_elements(posPermanent) gt qntLim then posPermanent = posPermanent[ (sort(randomu(seed,n_elements(posPermanent))))[0:qntLim-1] ]
+;
+;  rois = [PTR_NEW({RoiName: 'NC', RoiColor: [255,0,0], RoiLex: posNonChange}), $
+;    PTR_NEW({RoiName: 'Seasonal', RoiColor: [0,255,0], RoiLex: posChange[posSeasonal]}), $
+;    PTR_NEW({RoiName: 'Permanent', RoiColor: [0,0,255], RoiLex: posChange[posPermanent]})]
+;
+;
+;  mapLevel[*,*] = -1
+;  mapLevel[posNonChange] = 0
+;  mapLevel[posChange[posSeasonal]] = 1
+;  mapLevel[posChange[posPermanent]] = 2
+;
+;  Return, {rois: rois, mapLevel: mapLevel}
+;END
+;
+;
+;;----------------------
+;FUNCTION build_level_map_seeds_onHB, walk, tauDev, alpha, MHB
+;
+;  dims = size(walk.walk,/dimensions)
+;  mapLevel = INTARR(dims[1],dims[2])
+;
+;  _posNonChange = where(walk.stat[1,*,*] lt tauDev)
+;  _posChange = where(walk.stat[1,*,*] ge tauDev)
+;  
+;  ;Limitando apenas aos HBs
+;  posNonChange = [-1L]
+;  for i = 0L, n_elements(_posNonChange)-1 do $
+;    if MHB.homoImageRefined[_posNonChange[i]] ne 0 then posNonChange = [posNonChange, _posNonChange[i]]
+;  posNonChange = posNonChange[1:-1]
+;  
+;  posChange = [-1L]
+;  for i = 0L, n_elements(_posChange)-1 do $
+;    if MHB.homoImageRefined[_posChange[i]] ne 0 then posChange = [posChange, _posChange[i]]
+;  posChange = posChange[1:-1]
+;
+;  imTestLB = reform(walk.LB[1,*,*],dims[1],dims[2])
+;  imTestF = reform(walk.FT[1,*,*],dims[1],dims[2])
+;
+;  posF = where(imTestF lt alpha)
+;  posLB = where(imTestLB lt alpha)
+;
+;  posLB[0] = 0 & posF[0] = 0 ;garantir que nao exista caso "-1" (ausencia de)
+;  imAlphaF = imTestF*0 & imAlphaF[posF] = 1
+;  imAlphaLB = imTestLB*0 & imAlphaLB[posLB] = 1
+;
+;  ;imFLB = imAlphaF[*,*]*imAlphaLB[*,*]
+;  imFLB = imAlphaF[*,*]
+;
+;  posSeasonal = where(imFLB[posChange] eq 0)
+;  posPermanent = where(imFLB[posChange] eq 1)
+;  posSeasonal[0] = 0
+;  posPermanent[0] = 0
+;
+;  rois = [PTR_NEW({RoiName: 'NC', RoiColor: [255,0,0], RoiLex: posNonChange}), $
+;    PTR_NEW({RoiName: 'Seasonal', RoiColor: [0,255,0], RoiLex: posChange[posSeasonal]}), $
+;    PTR_NEW({RoiName: 'Permanent', RoiColor: [0,0,255], RoiLex: posChange[posPermanent]})]
+;
+;
+;  mapLevel[posNonChange] = 0
+;  mapLevel[posChange[posSeasonal]] = 1
+;  mapLevel[posChange[posPermanent]] = 2
+;
+;  Return, {rois: rois, mapLevel: mapLevel}
+;END
+;
+;
+;
+;
+;;-------------------------------------------
+;;
+;;----------------------
+;FUNCTION two_level_classification, walk, imRMSE, imLB, tauDev, alphaRMSE, alphaLB 
+;
+;  dims =  size(walk.walk,/dimensions)
+;  posNC = where(walk.stat[1,*,*] lt tauDev)
+;  posC = where(walk.stat[1,*,*] ge tauDev)
+;  rois = [PTR_NEW({RoiName: 'NC', RoiColor: [255,0,0], RoiLex: posNC}), PTR_NEW({RoiName: 'C', RoiColor: [0,255,0], RoiLex: posC})]
+;
+;  classMLC = MLC(walk.walk,rois)
+;  mlc_icm = ICM(classMLC.Index+1,1.0,10,n_elements(rois),reorder4icm(classMLC.RuleImage),'NULL')
+;  mlc_icm_cla = COLORIZE_INDEX(mlc_icm[*,*]-1, rois)
+;  
+;  posNonChange = where(classMLC.index eq 0)
+;  posChange = where(classMLC.index eq 1)  &  mapChange = INTARR(dims[1],dims[2])  &  mapChange[posChange] = 1
+;  _posSeasonal = where(walk.rmseLinear gt alphaRMSE)  &  mapSeason = INTARR(dims[1],dims[2])  &  mapSeason[_posSeasonal] = 1
+;  _posPermanent = where(walk.LB[1,*,*] le alphaLB) &  mapPermanent = INTARR(dims[1],dims[2])  &  mapPermanent[_posPermanent] = 1
+;  
+;  posSeasonal = where(mapChange*mapSeason*(~mapPermanent) eq 1)
+;  posPermanent = where(mapChange*(~mapSeason)*mapPermanent eq 1)
+;  rois2 = [PTR_NEW({RoiName: 'Seasonal', RoiColor: [0,255,0], RoiLex: posSeasonal}), PTR_NEW({RoiName: 'Permanent', RoiColor: [0,0,255], RoiLex: posPermanent})]
+;  classMLC2 = MLC(walk.walk,rois2)
+;  mlc_icm2 = ICM(classMLC2.Index+1,1.0,10,n_elements(rois2),reorder4icm(classMLC2.RuleImage),'NULL')
+;  mlc_icm_cla2 = COLORIZE_INDEX(mlc_icm2[*,*]-1, rois2)
+;  
+;  
+;  posS = where(classMLC2.index eq 0)
+;  posP = where(classMLC2.index eq 1)
+;  
+;  mapLevel = INTARR(dims[1],dims[2])
+;  mapLevel[posS] = 1
+;  mapLevel[posP] = 2
+;  mapLevel[posNonChange] = 0
+;  
+;  stop
+;  
+;;  
+;;  dims = size(imDev,/dimensions)
+;;  mapLevel = INTARR(dims[0],dims[1])
+;;
+;;  posNonChange = where(imDev lt tauDev)
+;;  posChange = where(imDev ge tauDev)
+;;
+;;  posSeasonal = where(imRMSE[posChange] gt tauRMSE)
+;;
+;;  mapThresholdRMSE = mapLevel
+;;
+;;  posLowRMSE = where(imRMSE[posChange] le tauRMSE)
+;;
+;;  mapThresholdRMSE[posChange[posLowRMSE]] =  1
+;;  __mapThresholdRMSE = mapThresholdRMSE
+;;
+;;  _posPermanent = where(__mapThresholdRMSE[posChange] eq 1);ge tauRMSE)
+;;
+;;  posPermanent = where(imLB[posChange[_posPermanent]] le alphaLB)
+;;
+;;  mapLevel[*] = -1
+;;  mapLevel[posNonChange] = 0
+;;  mapLevel[posChange[posSeasonal]] = 1
+;;  mapLevel[posChange[_posPermanent[posPermanent]]] = 2
+;;
+;;  ;make at least one pixel -1
+;;  mapLevel[0,0] = -1
+;
+;
+;  Return, 0 ;mapLevel
+;END

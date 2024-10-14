@@ -1,0 +1,42 @@
+;FUNCTION BALANCED_CUT, Img
+;
+;  FreedmanDiaconis = 2*__IQR(Img)*(N_ELEMENTS(Img)^(-1.0/3.0))
+;  h = HISTOGRAM(Img, locations = x, binsize = FreedmanDiaconis)
+;
+;  N = N_ELEMENTS(x)
+;  vecObj = DBLARR(N)
+;  FOR cut = 1, (N-2) DO BEGIN
+;    areaLeft = TOTAL(h[0:cut])
+;    rectLeft = (x[cut] - x[0]) * max(h[0:cut])
+;
+;    areaRight = TOTAL(h[cut:(N-1)])
+;    rectRight = (x[N-1] - x[cut]) * max(h[cut:(N-1)])
+;
+;    vecObj[cut] = ((areaLeft*areaRight)*(areaLeft + areaRight))/((rectLeft*rectRight)*(rectLeft+rectRight))
+;  ENDFOR
+;
+;  pos = where(vecObj eq max(vecObj))
+;
+;  Return, x[pos[0]]
+;END
+;
+;
+;;------------------------
+;FUNCTION __IQR, Img
+;
+;sortData = Img[SORT(Img)]
+;ind = N_ELEMENTS(Img)/2
+;
+;IF N_ELEMENTS(sortData) MOD 2 EQ 0 THEN BEGIN
+;  lower = sortData[0:ind-1]
+;  higher = sortData[ind:N_ELEMENTS(Img)-1]
+;ENDIF ELSE BEGIN
+;  lower = sortData[0:ind]
+;  higher = sortData[ind:N_ELEMENTS(Img)-1]
+;ENDELSE
+;
+;q25 = MEDIAN(lower, /EVEN)
+;q75 = MEDIAN(higher, /EVEN)
+;
+;Return, q75-q25
+;END
